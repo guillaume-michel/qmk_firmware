@@ -22,6 +22,13 @@ enum {
     GM_DOL,
     GM_CP,
     GM_STAR,
+    GM_EXLM,
+    GM_AT,
+    GM_HASH,
+    GM_BQUO,
+    GM_MINS,
+    GM_UNDS,
+    GM_PLUS,
 };
 
 static bool mac_mode = true;
@@ -76,15 +83,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /* Keymap 1: Symbol Layer
  *
  * ,--------------------------------------------------.           ,--------------------------------------------------.
- * |        |  F1  |  F2  |  F3  |  F4  |  F5  |      |           |      |  F6  |  F7  |  F8  |  F9  |  F10 |   F11  |
+ * |        |  F1  |  F2  |  F3  |  F4  |  F5  |  F6  |           | F7   |  F8  |  F9  |  F10 |  F11 |  F12 |        |
  * |--------+------+------+------+------+-------------|           |------+------+------+------+------+------+--------|
- * |        |   !  |   @  |   {  |   }  |   |  |      |           |      |   Up |   7  |   8  |   9  |   *  |   F12  |
+ * |        |   !  |   @  |   ?  |   ¨  |   |  |      |           |      |   /  |   7  |   8  |   9  |   *  |        |
  * |--------+------+------+------+------+------|      |           |      |------+------+------+------+------+--------|
- * |        |   #  |   $  |   (  |   )  |   `  |------|           |------| Down |   4  |   5  |   6  |   +  |        |
+ * |        |   #  |   \  |   &  |   ^  |   `  |------|           |------|   -  |   4  |   5  |   6  |   +  |        |
  * |--------+------+------+------+------+------|      |           |      |------+------+------+------+------+--------|
- * |        |   %  |   ^  |   [  |   ]  |   ~  |      |           |      |   &  |   1  |   2  |   3  |   \  |        |
+ * |        |   %  |   °  |   -  |   _  |   ~  |      |           |      |   0  |   1  |   2  |   3  |      |        |
  * `--------+------+------+------+------+-------------'           `-------------+------+------+------+------+--------'
- *   |      |      |      |      |      |                                       |      |    . |   0  |   =  |      |
+ *   |      |      |      |      |      |                                       |      |   .  |      |      |      |
  *   `----------------------------------'                                       `----------------------------------'
  *                                        ,-------------.       ,-------------.
  *                                        |      |      |       |      |      |
@@ -97,23 +104,23 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // SYMBOLS
 [SYMB] = KEYMAP(
        // left hand
-       KC_TRNS,KC_F1,  KC_F2,  KC_F3,  KC_F4,  KC_F5,  KC_TRNS,
-       KC_TRNS,FR_EXLM,FR_AT,  FR_LCBR,FR_RCBR,FR_PIPE,KC_TRNS,
-       KC_TRNS,FR_HASH,FR_DLR, FR_LPRN,FR_RPRN,FR_GRV,
-       KC_TRNS,FR_PERC,FR_CIRC,FR_LBRC,FR_RBRC,FR_TILD,KC_TRNS,
-       KC_TRNS,KC_TRNS,KC_TRNS,KC_TRNS,KC_TRNS,
-                                       KC_TRNS,KC_TRNS,
-                                               KC_TRNS,
-                               KC_TRNS,KC_TRNS,KC_TRNS,
+    KC_TRNS,        KC_F1,     KC_F2,      KC_F3,      KC_F4,      KC_F5,      KC_F6,
+    KC_TRNS,   M(GM_EXLM),  M(GM_AT),    FR_QUES,    FR_UMLT,    FR_PIPE,    KC_TRNS,
+    KC_TRNS,   M(GM_HASH),   FR_BSLS,     FR_AMP,    FR_CIRC, M(GM_BQUO),
+    KC_TRNS,      FR_PERC,     KC_NO, M(GM_MINS), M(GM_UNDS),    FR_TILD,    KC_TRNS,
+    KC_TRNS,      KC_TRNS,   KC_TRNS,    KC_TRNS,    KC_TRNS,
+                                                                     KC_TRNS,      KC_TRNS,
+                                                                                   KC_TRNS,
+                                                           KC_TRNS,  KC_TRNS,      KC_TRNS,
        // right hand
-       KC_TRNS, KC_F6,   KC_F7,  KC_F8,   KC_F9,   KC_F10,  KC_F11,
-       KC_TRNS, KC_UP,   FR_7,   FR_8,    FR_9,    FR_ASTR, KC_F12,
-                KC_DOWN, FR_4,   FR_5,    FR_6,    FR_PLUS, KC_TRNS,
-       KC_TRNS, KC_AMPR, FR_1,   FR_2,    FR_3,    FR_BSLS, KC_TRNS,
-                    KC_TRNS,FR_DOT,  FR_0,    FR_EQL,         RESET,
-       KC_TRNS, KC_TRNS,
-       KC_TRNS,
-       KC_TRNS, KC_TRNS, KC_TRNS
+    KC_F7,         KC_F8,     KC_F9,     KC_F10,     KC_F11,      KC_F12,    KC_TRNS,
+    KC_TRNS,     FR_SLSH,      FR_7,       FR_8,       FR_9,  M(GM_STAR),    KC_TRNS,
+              M(GM_MINS),      FR_4,       FR_5,       FR_6,  M(GM_PLUS),    KC_TRNS,
+    KC_TRNS,        FR_0,      FR_1,       FR_2,       FR_3,     KC_TRNS,    KC_TRNS,
+                            KC_TRNS,     FR_DOT,    KC_TRNS,     KC_TRNS,    KC_TRNS,
+    KC_TRNS,   KC_TRNS,
+    KC_TRNS,
+    KC_TRNS,   KC_TRNS, KC_TRNS
 ),
 };
 
@@ -310,11 +317,56 @@ static void tap_percent_key(void) {
 
 // " * "
 static void tap_star_key(void) {
-    register_code(KC_LSFT);
-    register_code(FR_DLR);
-    unregister_code(FR_DLR);
-    unregister_code(KC_LSFT);
+    if (mac_mode) {
+        register_code(KC_LSFT);
+        register_code(FR_DLR);
+        unregister_code(FR_DLR);
+        unregister_code(KC_LSFT);
+    } else {
+        register_code(KC_NUHS);
+        unregister_code(KC_NUHS);
+    }
 }
+
+// " ! "
+static void tap_exlm_key(void) {
+    if (mac_mode) {
+        register_code(KC_8);
+        unregister_code(KC_8);
+    } else {
+        register_code(KC_SLSH);
+        unregister_code(KC_SLSH);
+    }
+}
+
+// " @ "
+static void tap_at_key(void) {
+    if (mac_mode) {
+        register_code(FR_LESS);
+        unregister_code(FR_LESS);
+    } else {
+        register_code(KC_RALT);
+        register_code(KC_0);
+        unregister_code(KC_0);
+        unregister_code(KC_RALT);
+    }
+}
+
+// " + "
+static void tap_plus_key(void) {
+    if (mac_mode) {
+        register_code(KC_LSFT);
+        register_code(KC_SLSH);
+        unregister_code(KC_SLSH);
+        unregister_code(KC_LSFT);
+    } else {
+        register_code(KC_LSFT);
+        register_code(FR_MINS);
+        unregister_code(FR_MINS);
+        unregister_code(KC_LSFT);
+    }
+}
+
 
 const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt) {
 
@@ -449,6 +501,48 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt) {
                     // *
                     tap_star_key();
                 }
+            }
+            break;
+
+        case GM_EXLM:
+            if (record->event.pressed) {
+                tap_exlm_key();
+            }
+            break;
+
+        case GM_AT:
+            if (record->event.pressed) {
+                tap_at_key();
+            }
+            break;
+
+        case GM_HASH:
+            if (record->event.pressed) {
+                tap_hashtag_key();
+            }
+            break;
+
+        case GM_BQUO:
+            if (record->event.pressed) {
+                tap_back_quote_key();
+            }
+            break;
+
+        case GM_MINS:
+            if (record->event.pressed) {
+                tap_dash_key();
+            }
+            break;
+
+        case GM_UNDS:
+            if (record->event.pressed) {
+                tap_underscore_key();
+            }
+            break;
+
+        case GM_PLUS:
+            if (record->event.pressed) {
+                tap_plus_key();
             }
             break;
     }
