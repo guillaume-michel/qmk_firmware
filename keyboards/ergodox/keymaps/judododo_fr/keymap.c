@@ -24,11 +24,13 @@ enum {
     GM_STAR,
 };
 
+static bool mac_mode = true;
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /* Keymap 0: Basic layer
  *
  * ,--------------------------------------------------.           ,--------------------------------------------------.
- * |   Esc  |  1/& | 2/\  | 3/"  |  4/' |  5/` |  F3  |           |  F4  |  6/- |  7/~ | 8/_  |  9/# |  0/| | PC/MAC |
+ * |   Esc  |  1/& | 2/\  | 3/"  |  4/' |  5/` |  F3  |           |  F4  |  6/- |  7/~ | 8/_  |  9/# |  0/| | BckSpc |
  * |--------+------+------+------+------+-------------|           |------+------+------+------+------+------+--------|
  * | Tab    |   A  |   Z  |   E  |   R  |   T  |   [  |           |  ]   |   Y  |   U  |   I  |   O  |   P  |  +/=   |
  * |--------+------+------+------+------+------|   (  |           |  )   |------+------+------+------+------+--------|
@@ -38,12 +40,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * `--------+------+------+------+------+-------------'           `-------------+------+------+------+------+--------'
  *   | Symb | >/<  | €/$  | Alt  | Hyper|                                       | Hyper| %/ * |Left  | Down | Right|
  *   `----------------------------------'                                       `----------------------------------'
- *                                        ,-------------.       ,-------------.
- *                                        | Del  |      |       |      |      |
+ *                                        ,-------------.       ,---------------.
+ *                                        | Del  |      |       |      | PC/MAC |
  *                                 ,------|------|------|       |------+--------+------.
  *                                 |      |      | Home |       | PgUp |        |      |
- *                                 | Space|Backsp|------|       |------| Super  |Enter |
- *                                 |      |ace   |  End |       | PgDn |        |      |
+ *                                 | Space|Super |------|       |------| Super  |Enter |
+ *                                 |      |      |  End |       | PgDn |        |      |
  *                                 `--------------------'       `----------------------'
  */
 // If it accepts an argument (i.e, is a function), it doesn't need KC_.
@@ -58,16 +60,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
                                                                            KC_DELT,    KC_NO,
                                                                                      KC_HOME,
-                                                                  KC_SPC,  KC_BSPC,   KC_END,
+                                                                  KC_SPC,  KC_LGUI,   KC_END,
 
         // right hand
-         KC_F4,        M(GM_6),         M(GM_7), M(GM_8), M(GM_9),   M(GM_0),   M(GM_PC_MAC),
+         KC_F4,        M(GM_6),         M(GM_7), M(GM_8), M(GM_9),   M(GM_0),        KC_BSPC,
       M(GM_CP),           KC_Y,            KC_U,    KC_I,    KC_O,      KC_P,         FR_EQL,
                           KC_H,            KC_J,    KC_K,    KC_L,      FR_M,        KC_LCTL,
        FR_RCBR,           KC_N,         FR_COMM, FR_SCLN, FR_COLN,     KC_UP,        KC_RSFT,
                           ALL_T(KC_NO),  M(GM_STAR), KC_LEFT,        KC_DOWN,        KC_RGHT,
 
-         KC_NO,   KC_NO,
+         KC_NO,   M(GM_PC_MAC),
          KC_PGUP,
          KC_PGDN, KC_LGUI, KC_ENT
     ),
@@ -119,127 +121,278 @@ const uint16_t PROGMEM fn_actions[] = {
     [SYMB] = ACTION_LAYER_TAP_TOGGLE(SYMB),                // FN1 - Momentary Layer 1 (Symbols)
 };
 
-const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
-{
+static void show_mac_mode(void) {
+    ergodox_right_led_1_on ();
 
-    static bool mac_mode = true;
+    for (int i = LED_BRIGHTNESS_HI; i > LED_BRIGHTNESS_LO; i--) {
+        ergodox_right_led_1_set (i);
+        wait_ms (5);
+    }
+
+    ergodox_right_led_1_off ();
+}
+
+static void show_pc_mode(void) {
+    ergodox_right_led_2_on ();
+
+    for (int i = LED_BRIGHTNESS_HI; i > LED_BRIGHTNESS_LO; i--) {
+        ergodox_right_led_2_set (i);
+        wait_ms (5);
+    }
+
+    ergodox_right_led_2_off ();
+}
+
+static void show_mac_pc_mode(void) {
+    if (mac_mode) {
+        show_mac_mode();
+    } else {
+        show_pc_mode();
+    }
+}
+/*
+static void press_key(uint16_t key) {
+  register_code(key);
+  unregister_code(key);
+}
+
+static void press_two_keys(uint16_t key1, uint16_t key2) {
+  register_code(key1);
+  register_code(key2);
+  unregister_code(key2);
+  unregister_code(key1);
+}
+
+static void press_three_keys(uint16_t key1, uint16_t key2, uint16_t key3) {
+  register_code(key1);
+  register_code(key2);
+  register_code(key3);
+  unregister_code(key3);
+  unregister_code(key2);
+  unregister_code(key1);
+}
+*/
+// " \ "
+static void tap_backslash_key(void) {
+    register_code(KC_LSFT);
+    register_code(KC_LALT);
+    register_code(FR_COLN);
+    unregister_code(FR_COLN);
+    unregister_code(KC_LALT);
+    unregister_code(KC_LSFT);
+}
+
+// " ` "
+static void tap_back_quote_key(void) {
+    if (mac_mode) {
+        register_code(FR_GRV);
+        unregister_code(FR_GRV);
+    } else {
+        register_code(KC_RALT);
+        register_code(KC_7);
+        unregister_code(KC_7);
+        unregister_code(KC_RALT);
+    }
+}
+
+// " - "
+static void tap_dash_key(void) {
+    if (mac_mode) {
+        register_code(FR_MINS);
+        unregister_code(FR_MINS);
+    } else {
+        register_code(KC_6);
+        unregister_code(KC_6);
+    }
+}
+
+// " ~ "
+static void tap_tilde_key(void) {
+    register_code(KC_LALT);
+    register_code(KC_N);
+    unregister_code(KC_N);
+    unregister_code(KC_LALT);
+    register_code(KC_SPC);
+    unregister_code(KC_SPC);
+
+}
+
+// " _ "
+static void tap_underscore_key(void) {
+    if (mac_mode) {
+        register_code(KC_LSFT);
+        register_code(FR_MINS);
+        unregister_code(FR_MINS);
+        unregister_code(KC_LSFT);
+    } else {
+        register_code(KC_8);
+        unregister_code(KC_8);
+    }
+}
+
+// " # "
+static void tap_hashtag_key(void) {
+    if (mac_mode) {
+        register_code(KC_LSFT);
+        register_code(FR_LESS);
+        unregister_code(FR_LESS);
+        unregister_code(KC_LSFT);
+    } else {
+        register_code(KC_RALT);
+        register_code(KC_3);
+        unregister_code(KC_3);
+        unregister_code(KC_RALT);
+    }
+}
+
+// " | "
+static void tap_pipe_key(void) {
+    register_code(KC_LSFT);
+    register_code(KC_LALT);
+    register_code(KC_L);
+    unregister_code(KC_L);
+    unregister_code(KC_LALT);
+    unregister_code(KC_LSFT);
+
+}
+
+// " [ "
+static void tap_open_backet_key(void) {
+    register_code(KC_LALT);
+    register_code(KC_5);
+    unregister_code(KC_5);
+    unregister_code(KC_LALT);
+}
+
+// " ( "
+static void tap_open_parens_key(void) {
+    register_code(KC_5);
+    unregister_code(KC_5);
+}
+
+// " ] "
+static void tap_close_bracket_key(void) {
+    register_code(KC_LALT);
+    register_code(KC_MINS);
+    unregister_code(KC_MINS);
+    unregister_code(KC_LALT);
+}
+
+// " ) "
+static void tap_close_parens_key(void) {
+    register_code(KC_MINS);
+    unregister_code(KC_MINS);
+}
+
+// " € "
+static void tap_euro_key(void) {
+    unregister_code(KC_LSFT);
+    register_code (KC_RALT);
+    register_code(FR_DLR);
+    unregister_code(FR_DLR);
+    unregister_code (KC_RALT);
+    register_code(KC_LSFT);
+}
+
+// " $ "
+static void tap_dollar_key(void) {
+    register_code(FR_DLR);
+    unregister_code(FR_DLR);
+}
+
+// " % "
+static void tap_percent_key(void) {
+    register_code (KC_LSFT);
+    register_code(KC_QUOT);
+    unregister_code (KC_QUOT);
+    unregister_code(KC_LSFT);
+}
+
+// " * "
+static void tap_star_key(void) {
+    register_code(KC_LSFT);
+    register_code(FR_DLR);
+    unregister_code(FR_DLR);
+    unregister_code(KC_LSFT);
+}
+
+const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt) {
 
   // MACRODOWN only works in this function
     switch(id) {
-        case 0:
-            if (record->event.pressed) {
-                register_code(KC_RSFT);
-            } else {
-                unregister_code(KC_RSFT);
-            }
-            break;
-
         case GM_2:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     register_code (KC_2);
                     unregister_code (KC_2);
                 } else {
-                    register_code(KC_LSFT);
-                    register_code(KC_LALT);
-                    register_code(FR_COLN);
-                    unregister_code(FR_COLN);
-                    unregister_code(KC_LALT);
-                    unregister_code(KC_LSFT);
+                    tap_backslash_key();
                 }
             }
             break;
 
         case GM_5:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     register_code (KC_5);
                     unregister_code (KC_5);
                 } else {
-                    register_code(FR_GRV);
-                    unregister_code(FR_GRV);
-
+                    tap_back_quote_key();
                 }
             }
             break;
 
         case GM_6:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     register_code (KC_6);
                     unregister_code (KC_6);
                 } else {
-                    register_code(FR_MINS);
-                    unregister_code(FR_MINS);
-
+                    tap_dash_key();
                 }
             }
             break;
 
         case GM_7:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     register_code (KC_7);
                     unregister_code (KC_7);
                 } else {
-                    register_code(KC_LALT);
-                    register_code(KC_N);
-                    unregister_code(KC_N);
-                    unregister_code(KC_LALT);
-
+                    tap_tilde_key();
                 }
             }
             break;
 
         case GM_8:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     register_code (KC_8);
                     unregister_code (KC_8);
                 } else {
-                    register_code(KC_LSFT);
-                    register_code(FR_MINS);
-                    unregister_code(FR_MINS);
-                    unregister_code(KC_LSFT);
-
+                    tap_underscore_key();
                 }
             }
             break;
 
         case GM_9:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     register_code (KC_9);
                     unregister_code (KC_9);
                 } else {
-                    if (mac_mode) {
-                        register_code(KC_LSFT);
-                        register_code(FR_LESS);
-                        unregister_code(FR_LESS);
-                        unregister_code(KC_LSFT);
-                    } else {
-                        register_code(KC_RALT);
-                        register_code(KC_3);
-                        unregister_code(KC_3);
-                        unregister_code(KC_RALT);
-                    }
+                    tap_hashtag_key();
                 }
             }
             break;
 
         case GM_0:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     register_code (KC_0);
                     unregister_code (KC_0);
                 } else {
-                    register_code(KC_LSFT);
-                    register_code(KC_LALT);
-                    register_code(KC_L);
-                    unregister_code(KC_L);
-                    unregister_code(KC_LALT);
-                    unregister_code(KC_LSFT);
-
+                    tap_pipe_key();
                 }
             }
             break;
@@ -247,75 +400,54 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
         case GM_PC_MAC:
             if (record->event.pressed) {
                 mac_mode = !mac_mode;
+                show_mac_pc_mode();
             }
             break;
 
         case GM_OP:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT)  | MOD_BIT(KC_RSFT))) {
                     // [
-                    register_code(KC_LALT);
-                    register_code(KC_5);
-                    unregister_code(KC_5);
-                    unregister_code(KC_LALT);
+                    tap_open_backet_key();
                 } else {
                     // (
-                    register_code(KC_5);
-                    unregister_code(KC_5);
+                    tap_open_parens_key();
                 }
             }
             break;
 
         case GM_CP:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT)  | MOD_BIT(KC_RSFT))) {
                     // ]
-                    register_code(KC_LALT);
-                    register_code(KC_MINS);
-                    unregister_code(KC_MINS);
-                    unregister_code(KC_LALT);
+                    tap_close_bracket_key();
                 } else {
                     // )
-                    register_code(KC_MINS);
-                    unregister_code(KC_MINS);
+                    tap_close_parens_key();
                 }
             }
             break;
 
         case GM_DOL:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     // €
-                    unregister_code(KC_LSFT);
-                    register_code (KC_RALT);
-                    register_code(FR_DLR);
-                    unregister_code(FR_DLR);
-                    unregister_code (KC_RALT);
-                    register_code(KC_LSFT);
+                    tap_euro_key();
                 } else {
                     // $
-                    register_code(FR_DLR);
-                    unregister_code(FR_DLR);
-
+                    tap_dollar_key();
                 }
             }
             break;
 
         case GM_STAR:
             if (record->event.pressed) {
-                if (keyboard_report->mods & MOD_BIT(KC_LSFT)) {
+                if (keyboard_report->mods & (MOD_BIT(KC_LSFT) | MOD_BIT(KC_RSFT))) {
                     // %
-                    register_code (KC_LSFT);
-                    register_code(KC_QUOT);
-                    unregister_code (KC_QUOT);
-                    unregister_code(KC_LSFT);
+                    tap_percent_key();
                 } else {
                     // *
-                    register_code(KC_LSFT);
-                    register_code(FR_DLR);
-                    unregister_code(FR_DLR);
-                    unregister_code(KC_LSFT);
-
+                    tap_star_key();
                 }
             }
             break;
@@ -326,7 +458,7 @@ const macro_t *action_get_macro(keyrecord_t *record, uint8_t id, uint8_t opt)
 
 // Runs just one time when the keyboard initializes.
 void matrix_init_user(void) {
-
+    show_mac_pc_mode();
 };
 
 // Runs constantly in the background, in a loop.
@@ -338,9 +470,10 @@ void matrix_scan_user(void) {
     ergodox_right_led_1_off();
     ergodox_right_led_2_off();
     ergodox_right_led_3_off();
+
     switch (layer) {
       // TODO: Make this relevant to the ErgoDox EZ.
-        case 1:
+        case SYMB:
             ergodox_right_led_1_on();
             break;
         case 2:
